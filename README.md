@@ -1,6 +1,6 @@
 # AI Investment Multi-Agent System
 
-**Akinbobola Akinpelu & Ulises Zamarripa**
+**Akinbobola Akinpelu**
 ITAI 2376 — Professor McManus
 
 ---

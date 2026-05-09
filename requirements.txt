@@ -1,0 +1,7 @@
+crewai
+openai
+yfinance
+python-dotenv
+langchain
+langchain-openai
+requests

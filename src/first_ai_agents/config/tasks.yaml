@@ -1,0 +1,55 @@
+analyze_investment_question:
+  description: >
+    The user has asked: "{question}"
+    The target stock ticker is: {ticker}
+    The user's experience level is: {experience_level}
+
+    Use your tools to perform the following steps:
+    1. Call the "Get Stock Price Data" tool with ticker "{ticker}" to retrieve
+       current price, 52-week range, P/E ratio, and recent price history.
+    2. Call the "Get Stock News" tool with ticker "{ticker}" to retrieve recent
+       headlines and assess market sentiment (bullish / bearish / neutral).
+    3. Cross-reference the price data with the news sentiment.
+    4. Generate a clear trade recommendation (Buy / Hold / Sell) with reasoning,
+       written at the appropriate level for a {experience_level} investor.
+    5. Include a structured trade signal at the end of your response in this format:
+       TRADE SIGNAL: [BUY/HOLD/SELL] {ticker} | Qty: 5 | Confidence: [HIGH/MEDIUM/LOW]
+  expected_output: >
+    A structured investment analysis containing:
+    - Current price and key metrics from live data
+    - Sentiment summary (bullish / bearish / neutral) with supporting headlines
+    - Key risk factors
+    - A clear recommendation (Buy / Hold / Sell) with reasoning written for
+      a {experience_level} investor
+    - A final TRADE SIGNAL line: BUY/HOLD/SELL {ticker} | Qty: 5 | Confidence: HIGH/MEDIUM/LOW
+  agent: advisor_agent
+
+evaluate_trade_signal:
+  description: >
+    You have received a trade signal and recommendation from the Advisor Agent
+    for the asset: "{ticker}".
+
+    Review the Advisor's full analysis and extract the TRADE SIGNAL from it.
+    Then perform the following steps:
+    1. Call the "Check Portfolio" tool to review current holdings and available cash.
+    2. If the signal is BUY or SELL and confidence is HIGH or MEDIUM:
+       - Call the "Execute Paper Trade" tool with ticker="{ticker}", qty=5,
+         and side="buy" or "sell" based on the signal.
+    3. If the signal is HOLD or confidence is LOW:
+       - Do not execute. Explain why you are holding.
+    4. Report the full trade decision including the Advisor's reasoning and
+       your execution result or hold justification.
+
+    Confidence threshold: {confidence_threshold}
+    Disclaimer: This is a simulated paper trade. Not real financial advice.
+  expected_output: >
+    A trade decision report containing:
+    - Summary of the Advisor's recommendation
+    - Portfolio status (cash and current positions)
+    - Decision: EXECUTE or HOLD
+    - If EXECUTE: order confirmation with Order ID and status from Alpaca
+    - If HOLD: explanation of why the threshold was not met
+    - Disclaimer that this is paper trading only
+  agent: trader_agent
+  context:
+    - analyze_investment_question

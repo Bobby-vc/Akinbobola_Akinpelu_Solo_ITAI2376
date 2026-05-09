@@ -1,0 +1,26 @@
+[project]
+name = "first_ai_agents"
+version = "0.1.0"
+description = "first_ai_agents using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "alpaca-trade-api>=3.2.0",
+    "crewai[tools]==1.14.2",
+    "yfinance>=0.2.58",
+]
+
+[project.scripts]
+first_ai_agents = "first_ai_agents.main:run"
+run_crew = "first_ai_agents.main:run"
+train = "first_ai_agents.main:train"
+replay = "first_ai_agents.main:replay"
+test = "first_ai_agents.main:test"
+run_with_trigger = "first_ai_agents.main:run_with_trigger"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"

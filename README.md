@@ -41,8 +41,19 @@ trade_report.md (saved to project root)
 
 ## Deep Learning Connections
 
-- **Transformers (Advisor Agent)**: Powered by GPT-4o, a Transformer-based LLM that uses self-attention to reason over user questions, financial news, and market context. Responses are calibrated to the user's experience level.
-- **LSTM/RNN (Trader Agent)**: The Trader applies sequential reasoning over OHLCV price history to assess trend direction and generate a confidence score before approving trade execution.
+This project directly applies several deep learning concepts from ITAI 2376:
+
+**Transformers & Self-Attention**
+Both agents are powered by GPT-4o, a large language model built on the Transformer architecture. The self-attention mechanism allows the model to weigh relationships across the entire context window — connecting a user's question, live price data, and news headlines simultaneously to generate a coherent, context-aware response. This is the core of why the Advisor can calibrate its recommendation to a beginner vs. an advanced investor using the same underlying data.
+
+**LLM Reasoning Loop (Plan → Act → Observe → Respond)**
+The agents follow the ReAct (Reasoning + Acting) pattern, which maps directly to the reasoning loop covered in the course. For each query, the Advisor plans what data it needs, acts by calling the yfinance tools, observes the returned prices and headlines, and then responds with a structured recommendation and trade signal. The Trader repeats the same loop — checking the portfolio, deciding whether confidence is high enough, and acting on or holding the signal. CrewAI's task pipeline enforces this loop explicitly.
+
+**Prompt Engineering as Model Steering**
+Agent behavior is defined through carefully structured system prompts in `agents.yaml`. This is applied prompt engineering — using natural language instructions to constrain the model's role, tone, and output format without any weight updates. The Advisor is steered to produce a sentiment summary, a plain-language recommendation, and a structured trade signal in a single response. This reflects how Transformer models are guided through instruction-following rather than fine-tuning for every use case.
+
+**Embeddings & Semantic Understanding**
+Internally, GPT-4o converts all inputs — user questions, news headlines, and price summaries — into high-dimensional embeddings before processing. This enables the model to recognize semantic similarity across different phrasings of the same intent, such as treating "Is NVDA worth buying?" and "Should I invest in Nvidia?" as equivalent queries. While embeddings are not explicitly exposed in this project (no ChromaDB or vector store), they are the mechanism behind the model's language understanding at every step.
 
 ---
 
@@ -137,4 +148,3 @@ See `demo.mp4` in the repository root for a full walkthrough of the system runni
 ## Disclaimer
 
 This system is built for educational purposes only as part of a course project. All trading is simulated using Alpaca's paper trading sandbox. No real money is involved. This is not licensed financial advice.
->>>>>>> aeeb87c46d206d5b0bd7ad96dfa304a93a37cb0c

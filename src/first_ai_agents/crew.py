@@ -1,7 +1,8 @@
 from crewai import Agent, Crew, Process, Task
-from crewai.project import CrewBase, agent, crew, task
+from crewai.project import CrewBase, agent, after_kickoff, before_kickoff, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from first_ai_agents.tools.custom_tool import get_stock_data, get_stock_news, execute_paper_trade, get_portfolio
+from first_ai_agents.database import log_crew_run
 # If you want to run a snippet of code before or after the crew starts,
 # you can use the @before_kickoff and @after_kickoff decorators
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
@@ -65,3 +66,27 @@ class FirstAiAgents():
             verbose=True,
             # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
         )
+
+    @before_kickoff
+    def capture_inputs(self, inputs):
+        self.run_inputs = dict(inputs or {})
+        return inputs
+
+    @after_kickoff
+    def log_run(self, result):
+        # Logging must never break a run, so failures are reported and skipped
+        try:
+            inputs = getattr(self, "run_inputs", {})
+            tasks_output = result.tasks_output or []
+            log_crew_run(
+                question=inputs.get("question", ""),
+                ticker=inputs.get("ticker", ""),
+                experience=inputs.get("experience_level", ""),
+                threshold=float(inputs.get("confidence_threshold", 0.0)),
+                analysis=tasks_output[0].raw if len(tasks_output) > 0 else "",
+                trade_signal=tasks_output[1].raw if len(tasks_output) > 1 else "",
+                raw_output=result.raw,
+            )
+        except Exception as e:
+            print(f"Could not log crew run to database: {e}")
+        return result

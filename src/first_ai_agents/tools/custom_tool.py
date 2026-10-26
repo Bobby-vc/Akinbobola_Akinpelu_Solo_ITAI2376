@@ -4,6 +4,10 @@ import alpaca_trade_api as tradeapi
 from crewai.tools import tool
 from dotenv import load_dotenv
 
+from first_ai_agents.database import (
+    cache_stock_data, get_cached_stock, log_trade, log_portfolio_snapshot,
+)
+
 load_dotenv()
 
 
@@ -11,11 +15,15 @@ load_dotenv()
 def get_stock_data(ticker: str) -> str:
     """Fetches current price, 52-week high/low, volume, P/E ratio,
     and recent 5-day closing prices for a given stock ticker."""
+    cached = get_cached_stock(ticker)
+    if cached:
+        return cached["formatted"]
+
     stock = yf.Ticker(ticker)
     info = stock.info
     hist = stock.history(period="5d")
     closes = [round(c, 2) for c in hist['Close'].tolist()]
-    return f"""
+    formatted = f"""
     Ticker: {ticker}
     Current Price: ${info.get('currentPrice', 'N/A')}
     52-Week High: ${info.get('fiftyTwoWeekHigh', 'N/A')}
@@ -24,6 +32,16 @@ def get_stock_data(ticker: str) -> str:
     Volume: {info.get('volume', 'N/A')}
     Recent 5-Day Closes: {closes}
     """
+    cache_stock_data(ticker, {
+        "formatted": formatted,
+        "currentPrice": info.get('currentPrice'),
+        "fiftyTwoWeekHigh": info.get('fiftyTwoWeekHigh'),
+        "fiftyTwoWeekLow": info.get('fiftyTwoWeekLow'),
+        "trailingPE": info.get('trailingPE'),
+        "volume": info.get('volume'),
+        "closes": closes,
+    })
+    return formatted
 
 
 @tool("Get Stock News")
@@ -58,6 +76,7 @@ def execute_paper_trade(ticker: str, qty: int, side: str) -> str:
             type='market',
             time_in_force='gtc'
         )
+        log_trade(ticker, qty, side, order.id, order.status)
         return (
             f"Order submitted successfully!\n"
             f"Action: {side.upper()} {qty} shares of {ticker}\n"
@@ -81,6 +100,21 @@ def get_portfolio() -> str:
     try:
         account = api.get_account()
         positions = api.list_positions()
+        log_portfolio_snapshot(
+            cash=float(account.cash),
+            portfolio_value=float(account.portfolio_value),
+            buying_power=float(account.buying_power),
+            positions=[
+                {
+                    "symbol": p.symbol,
+                    "qty": p.qty,
+                    "avg_entry_price": p.avg_entry_price,
+                    "current_price": p.current_price,
+                    "unrealized_pl": p.unrealized_pl,
+                }
+                for p in positions
+            ],
+        )
         if positions:
             pos_str = "\n".join([
                 f"  {p.symbol}: {p.qty} shares @ avg ${p.avg_entry_price} "

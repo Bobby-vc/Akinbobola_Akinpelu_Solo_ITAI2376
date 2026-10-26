@@ -49,6 +49,23 @@ with st.sidebar:
                 account = api.get_account()
                 positions = api.list_positions()
 
+                from first_ai_agents.database import log_portfolio_snapshot
+                log_portfolio_snapshot(
+                    cash=float(account.cash),
+                    portfolio_value=float(account.portfolio_value),
+                    buying_power=float(account.buying_power),
+                    positions=[
+                        {
+                            "symbol": p.symbol,
+                            "qty": p.qty,
+                            "avg_entry_price": p.avg_entry_price,
+                            "current_price": p.current_price,
+                            "unrealized_pl": p.unrealized_pl,
+                        }
+                        for p in positions
+                    ],
+                )
+
                 st.metric("💵 Cash", f"${float(account.cash):,.2f}")
                 st.metric("📦 Portfolio Value", f"${float(account.portfolio_value):,.2f}")
                 st.metric("⚡ Buying Power", f"${float(account.buying_power):,.2f}")

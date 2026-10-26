@@ -1,8 +1,8 @@
-<<<<<<< HEAD
-.env
-__pycache__/
 .DS_Store
-=======
+
+# Local SQLite database
+trading.db
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -221,4 +221,3 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
->>>>>>> aeeb87c46d206d5b0bd7ad96dfa304a93a37cb0c

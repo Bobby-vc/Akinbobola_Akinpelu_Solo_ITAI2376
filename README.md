@@ -65,6 +65,8 @@ Internally, GPT-4o converts all inputs: user questions, news headlines, and pric
 | OpenAI GPT-4o | Core LLM for both agents |
 | yfinance | Live stock price data and news headlines |
 | Alpaca Markets API | Paper trade execution (simulated, no real money) |
+| Streamlit | Web dashboard for running analyses and viewing history |
+| SQLite | Local storage for crew runs, trades, and portfolio snapshots |
 | Python-dotenv | Secure API key management |
 
 ---
@@ -118,6 +120,36 @@ The system will prompt you for:
 
 The Advisor will then fetch live data, analyze it, and pass a trade signal to the Trader. If the signal meets the confidence threshold, the Trader will execute a paper order on Alpaca. A full trade report is saved to `trade_report.md` after each run.
 
+### Web Dashboard
+
+The same pipeline can be run from a browser using the Streamlit dashboard:
+
+```bash
+uv run streamlit run src/first_ai_agents/app.py
+```
+
+The dashboard provides:
+- **Analysis form**: enter a question, ticker, and experience level, then run both agents with a live progress indicator
+- **Trade report**: the generated `trade_report.md`, rendered on the page, plus collapsible agent logs
+- **Portfolio sidebar**: cash, portfolio value, buying power, and open positions with P&L, fetched live from Alpaca
+- **Trade History tab**: total, buy, and sell counts plus a table of every recorded trade
+- **Portfolio Snapshots tab**: portfolio value and cash over time, plus open positions from the latest snapshot
+
+---
+
+## Database
+
+Run history is stored in a local SQLite file, `trading.db`, in the project root. It is created automatically the first time `src/first_ai_agents/database.py` is imported, and is excluded from the repository.
+
+| Table | Contents |
+|-------|----------|
+| `crew_runs` | Each run's question, ticker, experience level, Advisor analysis, and trade signal |
+| `trade_history` | Each paper trade: ticker, quantity, side, Alpaca order ID, and status |
+| `portfolio_snapshots` | Cash, portfolio value, buying power, and open positions at a point in time |
+| `stock_cache` | Recent yfinance price data per ticker (treated as stale after 15 minutes) |
+
+To browse the data directly, open `trading.db` with [DB Browser for SQLite](https://sqlitebrowser.org) or the `sqlite3` command-line tool.
+
 ---
 
 ## Project Structure
@@ -130,9 +162,12 @@ first_ai_agents/
 │   │   └── tasks.yaml         # Task descriptions and agent assignments
 │   ├── tools/
 │   │   └── custom_tool.py     # yfinance and Alpaca tool definitions
+│   ├── app.py                 # Streamlit web dashboard
 │   ├── crew.py                # Crew assembly and agent/task wiring
+│   ├── database.py            # SQLite schema and read/write helpers
 │   └── main.py                # Entry point with user input prompts
 ├── trade_report.md            # Auto-generated after each run
+├── trading.db                 # SQLite database (created on first use, not committed)
 ├── pyproject.toml
 └── .env                       # API keys (not committed to repo)
 ```
